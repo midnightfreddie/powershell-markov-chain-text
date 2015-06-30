@@ -47,8 +47,11 @@ function Import-FileToMarkov {
 
 # Import a previously-saved Markov chain
 #$MarkovChain = Import-Clixml -Path .\markovchain.xml
-$row = ""
+
 # Ugly hack, made this a script block so I can emit the seed words and then emit each new word in the loop and capture the whole sequence in a pipe. But it's a stream.
+
+# Initilize row variable
+$row = ""
 & {
     # pick a random key name. The hash table didn't seem to like arrays as keys, so they're space-separated values. Split them back into discrete values
     ##### TODO : Pretty sure this is a logc error; should occasionally find a key that's whitespace or punctuation and a word and not split properly, but so far I haven't run across it.
