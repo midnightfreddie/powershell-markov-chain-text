@@ -37,32 +37,48 @@ function Import-FileToMarkov {
     $MarkovChain
 }
 
-
+# Builds the Markov chain from a text file input
 #$MarkovChain = Import-FileToMarkov $FilePath -Verbose
+
+# Display it
 #$MarkovChain
+
+#### THE FOLLOWING is working but not necessarily pretty yet. It needs to be made into a function.
+
+# Import a previously-saved Markov chain
 #$MarkovChain = Import-Clixml -Path .\markovchain.xml
 $row = ""
+# Ugly hack, made this a script block so I can emit the seed words and then emit each new word in the loop and capture the whole sequence in a pipe. But it's a stream.
 & {
-    # (Get-Random $MarkovChain.Count)
+    # pick a random key name. The hash table didn't seem to like arrays as keys, so they're space-separated values. Split them back into discrete values
+    ##### TODO : Pretty sure this is a logc error; should occasionally find a key that's whitespace or punctuation and a word and not split properly, but so far I haven't run across it.
     $temp = (($MarkovChain.GetEnumerator() | Get-Random -Count 1).Name).Split()
+    # Create an empty FIFO queue
     $q = New-Object System.Collections.Queue
+    # Emit the first two words
     $temp[0]
     $temp[1]
+    # Enqueue the words to seed the loop
     $q.Enqueue($temp[0])
     $q.Enqueue($temp[1])
 
-    1..100 | ForEach-Object {
+    # For now, looping a specified number of times
+    1..1000 | ForEach-Object {
+        # This seemed important when I first made this code, but the "if" statement appears unneeded now.
         if ($q.Count -eq 2) {
+            # Dequeue two values into the key
             $Key = @( $q.Dequeue(), $q.Dequeue() )
-            #$arr[0] = $q.Dequeue()
-            #$arr[1] = $q.Dequeue()
+            # Find the key in the chain, pick a random value from the array of values for it
             $Value = ($MarkovChain["$Key"])[(Get-Random $MarkovChain["$Key"].Count)]
+            # Emit the value (word)
             $Value
+            # Re-enqueue the 2nd key word and the value to make the next key lookup
             $q.Enqueue($Key[1])
             $q.Enqueue($Value)
         }
     }
 } |
+    # Piping to a hackish loop to limit the row size and emit the rows of text.
     ForEach-Object {
         $row += "$_ "
         if ($row.Length -gt 80 ) {
