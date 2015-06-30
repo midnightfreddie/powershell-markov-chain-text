@@ -16,7 +16,7 @@ function Import-FileToMarkov {
     # Load source text file
     Get-Content $Path |
         # Limit input size while developing
-        Select-Object -First 1000 |
+        # Select-Object -First 1000 |
         # Since gc is one object per line, do a foreach and split the line, emitting words to pipeline
         ForEach-Object { $_.split() } |
         # each word
@@ -36,5 +36,38 @@ function Import-FileToMarkov {
         }
     $MarkovChain
 }
-$MarkovChain = Import-FileToMarkov $FilePath
-$MarkovChain
+
+
+#$MarkovChain = Import-FileToMarkov $FilePath -Verbose
+#$MarkovChain
+#$MarkovChain = Import-Clixml -Path .\markovchain.xml
+$row = ""
+& {
+    # (Get-Random $MarkovChain.Count)
+    $temp = (($MarkovChain.GetEnumerator() | Get-Random -Count 1).Name).Split()
+    $q = New-Object System.Collections.Queue
+    $temp[0]
+    $temp[1]
+    $q.Enqueue($temp[0])
+    $q.Enqueue($temp[1])
+
+    1..100 | ForEach-Object {
+        if ($q.Count -eq 2) {
+            $Key = @( $q.Dequeue(), $q.Dequeue() )
+            #$arr[0] = $q.Dequeue()
+            #$arr[1] = $q.Dequeue()
+            $Value = ($MarkovChain["$Key"])[(Get-Random $MarkovChain["$Key"].Count)]
+            $Value
+            $q.Enqueue($Key[1])
+            $q.Enqueue($Value)
+        }
+    }
+} |
+    ForEach-Object {
+        $row += "$_ "
+        if ($row.Length -gt 80 ) {
+            $row
+            $row = ""
+        }
+    }
+    $row
