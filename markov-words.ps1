@@ -10,9 +10,9 @@ $MarkovChain = New-Object System.Collections.Hashtable
 
 # Any list of words will do
 # This is from https://www.kaggle.com/kaggle/us-baby-names
+# The ForEach-Object loop builds the Markov chain hashtable, using spaces as word starts and ends
 Import-Csv "F:\datascience\names\NationalNames.csv" |
     Select-Object -First $LimitInput -ExpandProperty Name |
-    # The following builds the Markov chain hashtable, using spaces as word starts and ends
     ForEach-Object {
         $Word = " " + $PSItem.Trim() + " "
         for ($i = 0; $i -lt $Word.Length - 2; $i++) {
